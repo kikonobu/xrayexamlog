@@ -108,7 +108,12 @@
   .banner { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn); font-weight: 700; }
 
   /* when strip */
-  .when { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: var(--surface); border-radius: 14px; }
+  .when { margin-top: 12px; padding: 12px 14px; background: var(--surface); border-radius: 14px; }
+  .whenrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .nudges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+  .nudge { min-height: 40px; padding: 0 6px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .nudge:active { transform: scale(0.97); }
+  .nudge.reset { color: var(--accent); border-color: var(--line); }
   .whentime { display: block; font-size: 28px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .whendate { display: block; margin-top: 2px; font-size: 15px; color: var(--muted); }
   .whenside { display: flex; align-items: center; gap: 10px; }
@@ -274,7 +279,6 @@
   .tile.sm { min-height: 56px; font-size: 17px; border-radius: 14px; }
   .tile.reg { min-height: 56px; font-size: 18px; }
   .tile.big { min-height: 84px; font-size: 26px; }
-  .tile.hero { display: block; width: 100%; min-height: 60px; margin: 0 0 10px; border-color: var(--accent); color: var(--accent); }
   .tile[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
   .tile:active, .seg:active { transform: scale(0.98); }
   .moretech { margin-top: 10px; }
@@ -301,6 +305,29 @@
   .selectlabel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; font-size: 15px; font-weight: 700; color: var(--muted); }
   .selectlabel select { min-height: 48px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font-size: 17px; font-weight: 700; }
   .preview { margin: 0; padding: 10px; border-radius: 10px; background: var(--bg); font: 14px/1.5 ui-monospace, Menlo, monospace; overflow-x: auto; white-space: pre; }
+  .shiftbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; margin: 0 0 12px; padding: 8px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--muted); font-size: 14px; font-weight: 700; text-align: left; }
+  .shiftbar.on { border-color: var(--ok); color: var(--ink); }
+  .shiftbar-main { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .shiftdot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+  .shiftbar.on .shiftdot { background: var(--ok); }
+  .shiftact { flex: none; color: var(--accent); }
+  .rec-label { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .recent { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .recpill { min-height: 44px; padding: 6px 14px; border-radius: 999px; border: 2px solid var(--accent); background: var(--surface); color: var(--accent); font-size: 16px; font-weight: 700; line-height: 1.15; }
+  .recpill:active { transform: scale(0.98); }
+  .addpartbtn { margin: 10px 0 4px; border-style: dashed; color: var(--accent); border-color: var(--accent); }
+  .searchbar { position: relative; margin: 10px 0; }
+  .searchbar input { display: block; width: 100%; min-height: 48px; padding: 0 44px 0 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font-size: 16px; -webkit-appearance: none; }
+  .searchbar input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .searchclr { position: absolute; top: 4px; right: 4px; width: 40px; height: 40px; border: 0; border-radius: 8px; background: none; color: var(--muted); font-size: 24px; line-height: 1; }
+  .searchclr[hidden] { display: none; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0 0 12px; }
+  .stat { min-height: 54px; padding: 6px 4px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+  .stat strong { font-size: 20px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .stat[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .stat[aria-pressed="true"] span { color: var(--bg); opacity: 0.78; }
+  .optbtns { display: flex; flex-wrap: wrap; gap: 8px; }
 </style>
 </head>
 <body>
@@ -430,12 +457,6 @@
   var SHORT = { "Chest and abdomen": "Chest & abd", "Upper extremity": "Upper ext", "Lower extremity": "Lower ext", "Head and neck": "Head & neck" };
 
   var SHEET_TECHS = ["Ben Poniatowski", "Britney Palmer", "Brittney Palmer", "Gabby Herrera", "Jaman Causie", "Jason", "Joesph V", "Lionel Woods", "Micah Leah", "Mona Kea", "Samrith Nith", "Sarah Turner", "Sean King", "Visal Ebbot"];
-  var DEFAULT_OPTS = { rowPerPart: false, header: false, timeFmt: "colon" };
-  function opt(name) {
-    var o = state.opts || {};
-    return o[name] === undefined ? DEFAULT_OPTS[name] : o[name];
-  }
-
   function defaultCats() {
     return [
       { id: "setting", label: "Setting", on: true, multi: false, ph: "Add an option", options: ["MOBILE", "FLUORO", "XR", "C-ARM", "DEXA"] },
@@ -447,7 +468,7 @@
     ];
   }
 
-  var state = { v: VERSION, cfg: { cats: defaultCats() }, entries: [], sync: { on: false, id: "", tabId: 0, title: "" }, dq: [], tomb: {}, cfgU: 0 };
+  var state = { v: VERSION, cfg: { cats: defaultCats() }, entries: [], sync: { on: false, id: "", tabId: 0, title: "" }, dq: [], tomb: {}, cfgU: 0, shift: { on: false, setting: "", tech: [] } };
   var storageFailed = false;
   var view = "log";
   var sel = {};
@@ -456,10 +477,11 @@
   var timeStr = "", dateStr = "", timeLocked = false, editWhen = false;
   var flag = false;
   var toast = null, toastTimer = null;
-  var confirmDel = null, lastDeleted = null, delTimer = null, copied = "";
+  var confirmDel = null, lastDeleted = null, delTimer = null;
   var editingId = null, draft = null, notice = "", noticeTimer = null;
   var backupLabel = "Copy backup";
-  var exportText = "";
+  var plainLabel = "Copy plain text";
+  var histQ = "", histAssist = "";
   var restoreFill = "";
   var restoreMsg = "";
   var focusAfter = null;
@@ -528,22 +550,84 @@
     if (!Array.isArray(state.dq)) state.dq = [];
     if (!state.tomb) state.tomb = {};
     if (!state.cfgU) state.cfgU = 0;
+    if (!state.shift || typeof state.shift !== "object") state.shift = { on: false, setting: "", tech: [] };
+  }
+  function validShiftSetting() {
+    var c = findCat("setting");
+    var v = state.shift && state.shift.setting;
+    if (!c || !c.on || !v) return null;
+    if (c.multi) {
+      var arr = asArray(v).filter(function (o) { return c.options.indexOf(o) !== -1; });
+      return arr.length ? arr : null;
+    }
+    var s = asArray(v)[0];
+    return s && c.options.indexOf(s) !== -1 ? s : null;
+  }
+  function validShiftTech() {
+    var c = findCat("tech");
+    var v = state.shift && state.shift.tech;
+    if (!c || !c.on || !v) return null;
+    var arr = asArray(v).filter(function (o) { return c.options.indexOf(o) !== -1; });
+    if (!arr.length) return null;
+    return c.multi ? arr : arr[0];
+  }
+  function applyShiftLock() {
+    if (!state.shift || !state.shift.on) return;
+    var sv = validShiftSetting();
+    var tv = validShiftTech();
+    if (sv) sel.setting = Array.isArray(sv) ? sv.slice() : sv;
+    if (tv) sel.tech = Array.isArray(tv) ? tv.slice() : tv;
+  }
+  function captureShiftFromVals(settingVal, techVal) {
+    if (settingVal) state.shift.setting = Array.isArray(settingVal) ? settingVal.slice() : settingVal;
+    if (techVal) state.shift.tech = Array.isArray(techVal) ? techVal.slice() : [techVal];
+  }
+  function toggleShiftLock() {
+    if (state.shift.on) {
+      state.shift.on = false;
+      if (!parts.length && !pendP && !pendV && !timeLocked) {
+        delete sel.setting;
+        delete sel.tech;
+      }
+    } else {
+      state.shift.on = true;
+      var sv = sel.setting, tv = sel.tech;
+      if (!sv || !tv) {
+        var last = sortedEntries()[0];
+        if (last) {
+          (last.vals || []).forEach(function (v) {
+            if (v.id === "setting" && !sv) sv = v.v;
+            if (v.id === "tech" && !tv) tv = v.v;
+          });
+        }
+      }
+      captureShiftFromVals(sv, tv);
+      applyShiftLock();
+    }
+    rawSave();
+    render();
   }
   var DRAFT_KEY = "examlog:draft";
   function saveDraft() {
     try {
-      if (editingId || !anySelected()) { localStorage.removeItem(DRAFT_KEY); return; }
+      var hasWork = parts.length > 0 || !!pendP || !!pendV || timeLocked;
+      if (editingId || !hasWork) { localStorage.removeItem(DRAFT_KEY); return; }
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ sel: sel, parts: parts, pendP: pendP, pendV: pendV, dateStr: dateStr, timeStr: timeStr, timeLocked: timeLocked, at: Date.now() }));
     } catch (e) { /* optional */ }
   }
   function restoreDraft() {
+    var restored = false;
     try {
       var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
-      if (!d || Date.now() - d.at > 6 * 3600 * 1000) { localStorage.removeItem(DRAFT_KEY); return; }
-      sel = d.sel || {}; parts = d.parts || []; pendP = d.pendP || null; pendV = d.pendV || null;
-      if (d.timeLocked) { timeLocked = true; timeStr = d.timeStr; dateStr = d.dateStr; }
-      advance();
+      if (!d || Date.now() - d.at > 6 * 3600 * 1000) { localStorage.removeItem(DRAFT_KEY); }
+      else {
+        sel = d.sel || {}; parts = d.parts || []; pendP = d.pendP || null; pendV = d.pendV || null;
+        if (d.timeLocked) { timeLocked = true; timeStr = d.timeStr; dateStr = d.dateStr; }
+        restored = true;
+        advance();
+      }
     } catch (e) { /* ignore */ }
+    if (!restored) applyShiftLock();
   }
   function rawSave() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); storageFailed = false; }
@@ -592,6 +676,14 @@
     var p = nowParts();
     timeStr = p.time; dateStr = p.date;
     syncWhen();
+  }
+  function nudgeTime(mins) {
+    var dp = dateStr.split("-").map(Number);
+    var tp = timeStr.split(":").map(Number);
+    var d = new Date(dp[0], dp[1] - 1, dp[2], tp[0], tp[1] + mins);
+    dateStr = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    timeStr = pad(d.getHours()) + ":" + pad(d.getMinutes());
+    timeLocked = true;
   }
 
   /* ---------- selection helpers ---------- */
@@ -673,15 +765,20 @@
       return '<button class="tab" role="tab" data-act="view" data-view="' + t[0] + '" aria-selected="' + (view === t[0]) + '">' + t[1] + extra + "</button>";
     }).join("");
     $("#banner").innerHTML = storageFailed
-      ? '<p class="banner">This browser can’t save data. Use Copy all in History often so nothing is lost.</p>' : "";
+      ? '<p class="banner">This browser can’t save data. Use Copy backup in Options often so nothing is lost.</p>' : "";
   }
 
   function renderWhen() {
     var live = !timeLocked;
-    var h = '<section class="when"><div><span class="whentime" id="whenTime">' + esc(fmtTime(timeStr)) + '</span>' +
+    var h = '<section class="when"><div class="whenrow"><div><span class="whentime" id="whenTime">' + esc(fmtTime(timeStr)) + '</span>' +
       '<span class="whendate" id="whenDate">' + esc(fmtDateLong(dateStr)) + "</span></div>" +
       '<div class="whenside"><span class="livetag' + (live ? " live" : "") + '">' + (live ? "Live" : "Set") + "</span>" +
-      '<button class="btn small" data-act="editwhen" aria-expanded="' + editWhen + '">' + (editWhen ? "Done" : "Change") + "</button></div></section>";
+      '<button class="btn small" data-act="editwhen" aria-expanded="' + editWhen + '">' + (editWhen ? "Done" : "Change") + "</button></div></div>" +
+      '<div class="nudges" role="group" aria-label="Quick time adjustments">' +
+      '<button class="nudge" data-act="nudge" data-min="-5">&minus;5m</button>' +
+      '<button class="nudge" data-act="nudge" data-min="-10">&minus;10m</button>' +
+      '<button class="nudge" data-act="nudge" data-min="-15">&minus;15m</button>' +
+      '<button class="nudge reset" data-act="now">Now</button></div></section>';
     if (editWhen) {
       h += '<div class="whenedit"><label>Time<input id="timeInput" type="time" value="' + esc(timeStr) + '"></label>' +
         '<label>Date<input id="dateInput" type="date" value="' + esc(dateStr) + '"></label>' +
@@ -746,14 +843,12 @@
     var c = findCat(catId);
     if (!c) return;
     timeLocked = true;
-    var was = stepDone(catId);
     if (c.multi) {
       var arr = Array.isArray(sel[catId]) ? sel[catId].slice() : [];
       var i = arr.indexOf(val);
       if (i === -1) arr.push(val); else arr.splice(i, 1);
       arr.sort(function (a, b) { return c.options.indexOf(a) - c.options.indexOf(b); });
       if (arr.length) sel[catId] = arr; else delete sel[catId];
-      if (!was && hasVal(c) && !c.optional) advance();
     } else if (c.optional) {
       if (sel[catId] === val) delete sel[catId]; else sel[catId] = val;
     } else {
@@ -766,6 +861,12 @@
     timeLocked = true;
     var was = parts.length > 0;
     parts.push({ p: p, n: n || "" });
+    if (isFluoroPart(p)) {
+      var sc = findCat("setting");
+      if (sc && sc.on && sc.options.indexOf("FLUORO") !== -1) {
+        sel.setting = sc.multi ? ["FLUORO"] : "FLUORO";
+      }
+    }
     pendP = null; pstage = "region"; regionSel = null; topNext = true;
     if (!was) advance();
   }
@@ -830,17 +931,38 @@
       }).join("") + "</div>";
     }
     h += '<h2 class="steph">' + (parts.length ? "Add another body part" : "Body part") + "</h2>";
-    if (pc.options.indexOf("Chest") !== -1 && vc.options.indexOf("1") !== -1) {
-      h += '<button class="tile hero" data-act="chest1">Chest 1v</button>';
+    var rec = recentParts(3);
+    if (rec.length) {
+      h += '<p class="rec-label">Recent</p><div class="recent">' + rec.map(function (x) {
+        return '<button class="recpill" data-act="recentpart" data-p="' + esc(x.p) + '" data-n="' + esc(x.n) + '">' + esc(partLabel(x)) + "</button>";
+      }).join("") + "</div>";
     }
     return h + '<div class="tiles c2">' + groups.map(function (g) {
       return '<button class="tile reg" data-act="region" data-region="' + esc(g[0]) + '">' + esc(g[0]) + "</button>";
     }).join("") + "</div>";
   }
 
+  function recentParts(max) {
+    var pc = findCat("exam"), vc = findCat("views");
+    if (!pc || !vc) return [];
+    var seen = {}, out = [];
+    sortedEntries().forEach(function (e) {
+      if (out.length >= max) return;
+      partsOf(e).forEach(function (x) {
+        if (out.length >= max || !x.p) return;
+        if (pc.options.indexOf(x.p) === -1) return;
+        if (x.n && vc.options.indexOf(x.n) === -1) return;
+        if (!x.n && !isFluoroPart(x.p)) return;
+        var k = x.p + "\0" + (x.n || "");
+        if (!seen[k]) { seen[k] = true; out.push({ p: x.p, n: x.n || "" }); }
+      });
+    });
+    return out;
+  }
+
   function renderCatStep(c) {
     var opts = orderedOptions(c);
-    var h = '<h2 class="steph">' + esc(c.label) + (c.multi ? '<span class="steph-sub">pick all that apply</span>' : "") + "</h2>";
+    var h = '<h2 class="steph">' + esc(c.label) + (c.multi ? '<span class="steph-sub">pick all, then tap Done</span>' : "") + "</h2>";
     var more = false;
     if (c.id === "tech" && opts.length > 6 && !techAll) {
       var chosen = asArray(sel[c.id] || []).filter(function (o) { return o; });
@@ -865,12 +987,34 @@
       return '<button class="rvrow' + (done ? "" : " todo") + '" data-act="step" data-step="' + r[0] + '"><span class="rvl">' + esc(r[1]) +
         '</span><span class="rvv">' + (done ? esc(stepValue(r[0])) : "Not chosen yet") + '</span><span class="rvgo">' + (done ? "Change" : "Add") + "</span></button>";
     }).join("") + "</div>";
+    if (partsAvailable() && parts.length) {
+      h += '<button class="btn wide addpartbtn" data-act="addpart">+ Add another body part</button>';
+    }
     optionalCats().forEach(function (c) {
       h += '<p class="sublabel">' + esc(c.label) + " (optional)</p>" + '<div class="tiles c2">' + c.options.map(function (o) {
         return '<button class="tile sm" aria-pressed="' + isPicked(c, o) + '" data-act="pick" data-cat="' + c.id + '" data-val="' + esc(o) + '">' + esc(o) + "</button>";
       }).join("") + "</div>";
     });
     return h + renderWhen() + '<p class="note"><button class="link" data-act="clear">Start over</button></p>';
+  }
+
+  function renderShiftBar() {
+    var sc = findCat("setting"), tc = findCat("tech");
+    if ((!sc || !sc.on) && (!tc || !tc.on)) return "";
+    var on = !!(state.shift && state.shift.on);
+    var label;
+    if (on) {
+      var bits = [];
+      var sv = validShiftSetting(), tv = validShiftTech();
+      if (sv) bits.push(asArray(sv).join(", "));
+      if (tv) bits.push(asArray(tv).join(", "));
+      label = bits.length ? "Shift lock: " + bits.join(" · ") : "Shift lock on — locks after next save";
+    } else {
+      label = "Shift lock: keep Setting & Tech";
+    }
+    return '<button class="shiftbar' + (on ? " on" : "") + '" data-act="toggleshift" aria-pressed="' + on + '">' +
+      '<span class="shiftbar-main"><span class="shiftdot" aria-hidden="true"></span><span>' + esc(label) + '</span></span>' +
+      '<span class="shiftact">' + (on ? "Turn off" : "Turn on") + "</span></button>";
   }
 
   function editBanner() {
@@ -883,7 +1027,7 @@
   function renderLog() {
     if (step !== "review" && stepIds().indexOf(step) === -1) step = firstIncomplete();
     var body = step === "review" ? renderReview() : (step === "part" ? renderPartStep() : renderCatStep(findCat(step)));
-    return (editingId ? editBanner() : "") + renderStrip() + '<section class="wiz">' + body + "</section>";
+    return (editingId ? editBanner() : "") + renderStrip() + (editingId ? "" : renderShiftBar()) + '<section class="wiz">' + body + "</section>";
   }
 
   function sortedEntries() {
@@ -897,27 +1041,47 @@
       (lastDeleted ? '<div class="undostrip" role="status"><span>Exam deleted.</span><button data-act="undodel">Undo</button></div>' : "");
   }
 
-  function renderHistory() {
-    var list = sortedEntries();
-    if (!list.length) {
-      return undoStrip() + renderSyncCard() + '<div class="empty"><h2>No exams logged yet</h2><p>Saved exams show up here, newest first.</p></div>';
+  function matchesQuery(e, q) {
+    var needle = String(q || "").toLowerCase().trim();
+    if (!needle) return true;
+    var hay = [
+      e.date, dateFull(e.date), fmtDateLong(e.date), fmtTime(e.time),
+      partsOf(e).map(partLabel).join(" ")
+    ];
+    (e.vals || []).forEach(function (v) { hay.push(asArray(v.v).join(" ")); });
+    var text = hay.join(" ").toLowerCase();
+    return needle.split(/\s+/).every(function (w) { return text.indexOf(w) !== -1; });
+  }
+
+  function renderHistoryBody(allList) {
+    var searched = allList.filter(function (e) { return matchesQuery(e, histQ); });
+    var cO = 0, cA = 0, cU = 0;
+    searched.forEach(function (e) {
+      var code = assistCode(valOf(e, "assist"));
+      if (code === "O") cO++;
+      else if (code === "A") cA++;
+      else if (code === "U") cU++;
+    });
+    var pills = [
+      ["", "All", searched.length],
+      ["O", "Observed", cO],
+      ["A", "Assisted", cA],
+      ["U", "Unassisted", cU]
+    ];
+    var h = '<div class="stats" role="group" aria-label="Filter by assistance">' + pills.map(function (p) {
+      return '<button class="stat" data-act="histfilter" data-code="' + p[0] + '" aria-pressed="' + (histAssist === p[0]) + '">' +
+        "<strong>" + p[2] + "</strong><span>" + p[1] + "</span></button>";
+    }).join("") + "</div>";
+    var shown = histAssist ? searched.filter(function (e) { return assistCode(valOf(e, "assist")) === histAssist; }) : searched;
+    if (!shown.length) {
+      return h + '<div class="empty"><h2>No matching exams</h2><p>Try a different search or filter.</p></div>';
     }
     var counts = {};
-    list.forEach(function (e) { counts[e.date] = (counts[e.date] || 0) + 1; });
-    var fresh = list.filter(function (e) { return !e.x; }).length;
-    var h = undoStrip() + renderSyncCard() + '<section class="sheetbox"><h2>Copy to Google Sheets</h2>' +
-      '<p class="hint">Copy, then paste into the first empty row of your sheet. The columns follow the format set in Options.</p>' +
-      '<div class="sheetbtns"><button class="btn solid" data-act="sheetnew"' + (fresh ? "" : " disabled") + ">" + esc(copied === "new" ? "Copied" : "Copy new (" + fresh + ")") + "</button>" +
-      '<button class="btn" data-act="sheetall">' + esc(copied === "all" ? "Copied" : "Copy all (" + list.length + ")") + "</button></div>" +
-      '<p class="note">New means not copied yet. Copy all copies every exam again. Each date below also has its own Copy day button.</p>' +
-      '<p class="note"><button class="link" data-act="copytext">' + esc(copied === "text" ? "Copied as text" : "Copy as plain text instead") + "</button></p></section>";
-    if (exportText) {
-      h += '<p class="note">Copying was blocked. Select all the text below and copy it.</p><textarea class="export" id="exportBox" readonly>' + esc(exportText) + "</textarea>";
-    }
+    shown.forEach(function (e) { counts[e.date] = (counts[e.date] || 0) + 1; });
     var lastDate = "";
-    list.forEach(function (e) {
+    shown.forEach(function (e) {
       if (e.date !== lastDate) {
-        h += '<div class="dayrow"><h2 class="dayhead"><span>' + esc(dateHeading(e.date)) + "</span><span>" + counts[e.date] + " exam" + (counts[e.date] === 1 ? "" : "s") + '</span></h2><button class="btn small" data-act="copyday" data-date="' + e.date + '">' + esc(copied === "day:" + e.date ? "Copied" : "Copy day") + "</button></div>";
+        h += '<h2 class="dayhead"><span>' + esc(dateHeading(e.date)) + "</span><span>" + counts[e.date] + " exam" + (counts[e.date] === 1 ? "" : "s") + "</span></h2>";
         lastDate = e.date;
       }
       h += '<article class="entry"><div class="etop"><div class="etl"><strong>' + esc(fmtTime(e.time)) + "</strong>" + sheetMark(e) + "</div>" +
@@ -932,6 +1096,17 @@
         }).join("") + "</div>" + entryNote(e) + "</article>";
     });
     return h;
+  }
+
+  function renderHistory() {
+    var list = sortedEntries();
+    if (!list.length) {
+      return undoStrip() + renderSyncCard() + '<div class="empty"><h2>No exams logged yet</h2><p>Saved exams show up here, newest first.</p></div>';
+    }
+    return undoStrip() + renderSyncCard() +
+      '<div class="searchbar"><input type="search" id="histSearch" placeholder="Search body part, tech, setting, date…" value="' + esc(histQ) + '" autocomplete="off" spellcheck="false">' +
+      '<button class="searchclr" id="histClear" data-act="clearsearch" aria-label="Clear search"' + (histQ ? "" : " hidden") + '>&times;</button></div>' +
+      '<div id="histBody">' + renderHistoryBody(list) + "</div>";
   }
 
   function renderOptions() {
@@ -954,20 +1129,9 @@
     h += '<section class="opt"><div class="opthead"><h2>New group</h2></div><p class="hint">For example: Patient position, Preceptor, Patient type.</p>' +
       '<div class="addrow"><input type="text" id="newcat" placeholder="Group name" maxlength="30" enterkeyhint="done" autocomplete="off">' +
       '<button class="btn" data-act="addcat">Add group</button></div></section>';
-    var sample = { date: "2026-10-13", time: "13:30", parts: [{ p: "Foot", n: "3" }],
-      vals: [{ id: "setting", l: "Setting", v: "XR" }, { id: "assist", l: "Assistance", v: "Assisted" }, { id: "tech", l: "Tech", v: ["Ben Poniatowski"] }] };
-    var prev = sheetString([sample], opt("header")).split(String.fromCharCode(9)).join("  |  ");
-    h += '<section class="opt"><div class="opthead"><h2>Google Sheets format</h2></div>' +
-      '<p class="hint">Controls what the Copy buttons put on your clipboard. Columns match your sheet: date, time, category, exam and views, O / A / U, special population, supervising tech. Direct sheet sync always uses the official format.</p>' +
-      '<div class="switches"><label class="switch"><input type="checkbox" data-opt="rowPerPart"' + (opt("rowPerPart") ? " checked" : "") + "> One row per body part</label>" +
-      '<label class="switch"><input type="checkbox" data-opt="header"' + (opt("header") ? " checked" : "") + "> Include a header row</label></div>" +
-      '<label class="selectlabel">Time format<select data-opt="timeFmt">' + [["colon", "13:30 (what your sheet requires)"], ["short", "130 (12-hour, no colon)"], ["12", "1:30 PM"], ["24", "1330 (24-hour, no colon)"]].map(function (o) {
-        return '<option value="' + o[0] + '"' + (opt("timeFmt") === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
-      }).join("") + "</select></label>" +
-      '<p class="sublabel">Example row</p><pre class="preview">' + esc(prev) + "</pre></section>";
     h += '<section class="opt"><div class="opthead"><h2>Back up and restore</h2></div>' +
       '<p class="hint">Your log is stored only on this device. Copy a backup now and then. To restore, or move to a new phone, paste a backup below.</p>' +
-      '<button class="btn" data-act="backup">' + esc(backupLabel) + "</button>" +
+      '<div class="optbtns"><button class="btn" data-act="backup">' + esc(backupLabel) + '</button><button class="btn" data-act="copyplain">' + esc(plainLabel) + "</button></div>" +
       '<textarea class="export" id="restoreBox" placeholder="Paste a backup here to restore">' + esc(restoreFill) + "</textarea>" +
       '<button class="btn" data-act="restore">Restore from backup</button>' +
       (restoreMsg ? '<p class="note" role="status">' + esc(restoreMsg) + "</p>" : "") + "</section>";
@@ -1138,7 +1302,9 @@
   }
 
   function clearAll() {
-    sel = {}; parts = []; pendP = null; pendV = null; flag = false; goStep("part");
+    sel = {}; parts = []; pendP = null; pendV = null; flag = false; timeLocked = false; editWhen = false; tick();
+    applyShiftLock();
+    goStep("part");
     render();
   }
 
@@ -1156,9 +1322,13 @@
       }),
       u: Date.now()
     };
+    if (state.shift && state.shift.on) {
+      captureShiftFromVals(sel.setting, sel.tech);
+    }
     state.entries.push(entry);
     afterAdd(entry);
     sel = {}; parts = []; pendP = null; pendV = null; flag = false; timeLocked = false; editWhen = false; tick();
+    applyShiftLock();
     goStep("part");
     showToast("Saved " + fmtTime(entry.time), entry.id);
     render();
@@ -1180,17 +1350,6 @@
     render();
   }
 
-  function exportString() {
-    return sortedEntries().map(function (e) {
-      var bits = [];
-      if (Array.isArray(e.parts) && e.parts.length) {
-        bits.push("Exam: " + e.parts.map(partLabel).join(", "));
-      }
-      e.vals.forEach(function (v) { bits.push(v.l + ": " + asArray(v.v).join(", ")); });
-      return e.date + " " + fmtTime(e.time) + " | " + bits.join(" | ");
-    }).join("\n");
-  }
-
   function copyText(text) {
     var fallback = function () {
       try {
@@ -1208,20 +1367,6 @@
     return fallback();
   }
 
-  function flashCopied(which) {
-    copied = which;
-    setTimeout(function () { copied = ""; if (view === "history") render(); }, 2000);
-  }
-
-  function copyPlain() {
-    var text = exportString();
-    copyText(text).then(function (ok) {
-      if (ok) { exportText = ""; flashCopied("text"); } else { exportText = text; }
-      render();
-      if (!ok) { var b = $("#exportBox"); if (b) { b.focus(); b.select(); } }
-    });
-  }
-
   function dateFull(ds) {
     var p = ds.split("-").map(Number);
     return pad(p[1]) + "/" + pad(p[2]) + "/" + p[0];
@@ -1230,18 +1375,7 @@
     var p = t.split(":").map(Number);
     return pad(p[0]) + ":" + pad(p[1]);
   }
-  function dateCell(ds) { return dateFull(ds); }
-  function timeCell(t) {
-    var p = t.split(":").map(Number), h = p[0], m = p[1];
-    var f = opt("timeFmt");
-    if (f === "colon") return pad(h) + ":" + pad(m);
-    if (f === "24") return pad(h) + pad(m);
-    if (f === "12") return fmtTime(t);
-    return String(((h + 11) % 12) + 1) + pad(m);
-  }
   function assistCode(s) { return s ? String(s).charAt(0).toUpperCase() : ""; }
-
-  function cell(s) { return String(s == null ? "" : s).replace(/\s+/g, " ").trim(); }
 
   function valOf(e, id) {
     var v = (e.vals || []).find(function (x) { return x.id === id; });
@@ -1263,58 +1397,22 @@
     return (a.date + " " + a.time).localeCompare(b.date + " " + b.time);
   }
 
-  function sheetString(list, withHeader) {
-    var TAB = String.fromCharCode(9), NL = String.fromCharCode(10);
-    var core = ["exam", "views", "setting", "assist", "special", "tech"];
-    var asc = list.slice().sort(byTimeAsc);
-    var extraIds = [], labels = {};
-    asc.forEach(function (e) {
-      (e.vals || []).forEach(function (v) {
-        if (core.indexOf(v.id) === -1) {
-          if (extraIds.indexOf(v.id) === -1) extraIds.push(v.id);
-          labels[v.id] = v.l;
-        }
-      });
-    });
-    state.cfg.cats.forEach(function (c) {
-      if (core.indexOf(c.id) === -1 && c.on && c.options.length && extraIds.indexOf(c.id) === -1) {
-        extraIds.push(c.id); labels[c.id] = c.label;
-      }
-    });
-    var rows = [];
-    if (withHeader) {
-      rows.push(["Date (mm/dd/yyyy)", "Time (hh:mm)", "Category", "Exam & # of Views", "O / A/ U", "Special Population", "Supervising Tech"]
-        .concat(extraIds.map(function (id) { return labels[id] || id; })));
-    }
-    asc.forEach(function (e) {
-      var base = sheetRow(e);
-      base[0] = dateCell(e.date); base[1] = timeCell(e.time);
-      var ps = partsOf(e).map(partLabel);
-      var lines = opt("rowPerPart") ? (ps.length ? ps : [""]) : [base[3]];
-      lines.forEach(function (pl) {
-        var r = base.slice();
-        r[3] = pl;
-        rows.push(r.concat(extraIds.map(function (id) { return valOf(e, id); })));
-      });
-    });
-    return rows.map(function (r) { return r.map(cell).join(TAB); }).join(NL);
-  }
-
-  function copySheet(mode, day) {
-    var list = mode === "new" ? state.entries.filter(function (e) { return !e.x; })
-      : mode === "day" ? state.entries.filter(function (e) { return e.date === day; })
-      : state.entries.slice();
-    if (!list.length) return;
-    var text = sheetString(list, opt("header"));
+  function copyPlainText() {
+    var text = sortedEntries().map(function (e) {
+      var bits = [];
+      if (Array.isArray(e.parts) && e.parts.length) bits.push("Exam: " + e.parts.map(partLabel).join(", "));
+      (e.vals || []).forEach(function (v) { bits.push(v.l + ": " + asArray(v.v).join(", ")); });
+      return e.date + " " + fmtTime(e.time) + " | " + bits.join(" | ");
+    }).join("\n");
+    if (!text) { restoreMsg = "No exams to copy yet."; render(); return; }
     copyText(text).then(function (ok) {
       if (ok) {
-        list.forEach(function (e) { e.x = true; });
-        persist();
-        exportText = "";
-        flashCopied(mode === "day" ? "day:" + day : mode);
-      } else { exportText = text; }
+        plainLabel = "Copied"; restoreFill = ""; restoreMsg = "";
+        setTimeout(function () { plainLabel = "Copy plain text"; if (view === "options") render(); }, 2000);
+      } else {
+        restoreFill = text; restoreMsg = "Copying was blocked. Select all the text in the box and copy it.";
+      }
       render();
-      if (!ok) { var b = $("#exportBox"); if (b) { b.focus(); b.select(); } }
     });
   }
 
@@ -1380,13 +1478,19 @@
     if (!t) return;
     var act = t.dataset.act;
     if (act === "toggle" || act === "multi" || act === "req") return; // handled on change
-    if (act === "view") { view = t.dataset.view; exportText = ""; restoreMsg = ""; render(); window.scrollTo(0, 0); }
+    if (act === "view") { view = t.dataset.view; restoreMsg = ""; render(); window.scrollTo(0, 0); }
     else if (act === "pick") { wizPick(t.dataset.cat, t.dataset.val); render(); }
     else if (act === "pickpart" || act === "pickviews") { pickPart(act, t.dataset.val); render(); }
     else if (act === "rmpart") { parts.splice(Number(t.dataset.i), 1); if (!parts.length) goStep("part"); render(); }
     else if (act === "region") { regionSel = t.dataset.region; pstage = "parts"; topNext = true; render(); }
-    else if (act === "chest1") { addPart("Chest", "1"); render(); }
+    else if (act === "recentpart") { addPart(t.dataset.p, t.dataset.n); render(); }
+    else if (act === "addpart") { goStep("part"); render(); }
+    else if (act === "toggleshift") toggleShiftLock();
+    else if (act === "histfilter") { histAssist = (histAssist === t.dataset.code && t.dataset.code) ? "" : t.dataset.code; var hb = $("#histBody"); if (hb) hb.innerHTML = renderHistoryBody(sortedEntries()); else render(); }
+    else if (act === "clearsearch") { histQ = ""; var hs = $("#histSearch"); if (hs) { hs.value = ""; hs.focus(); } var clr = $("#histClear"); if (clr) clr.hidden = true; var hb2 = $("#histBody"); if (hb2) hb2.innerHTML = renderHistoryBody(sortedEntries()); }
+    else if (act === "copyplain") copyPlainText();
     else if (act === "editwhen") { editWhen = !editWhen; render(); }
+    else if (act === "nudge") { nudgeTime(Number(t.dataset.min)); render(); }
     else if (act === "now") { timeLocked = false; editWhen = false; tick(); render(); }
     else if (act === "clear") clearAll();
     else if (act === "save") saveExam();
@@ -1396,10 +1500,6 @@
     else if (act === "next") { advance(); render(); }
     else if (act === "finish") { goStep(firstIncomplete()); render(); }
     else if (act === "techall") { techAll = !techAll; render(); }
-    else if (act === "sheetnew") copySheet("new");
-    else if (act === "sheetall") copySheet("all");
-    else if (act === "copyday") copySheet("day", t.dataset.date);
-    else if (act === "copytext") copyPlain();
     else if (act === "backup") backup();
     else if (act === "restore") restore();
     else if (act === "editentry") startEdit(t.dataset.id);
@@ -1479,10 +1579,6 @@
     } else if (t.dataset && t.dataset.rec) {
       sy.off[t.dataset.rec] = !t.checked;
       render();
-    } else if (t.dataset && t.dataset.opt) {
-      state.opts = state.opts || {};
-      state.opts[t.dataset.opt] = t.type === "checkbox" ? t.checked : t.value;
-      persist(); render();
     }
   });
 
@@ -2097,9 +2193,10 @@
         '<button class="btn solid wide" data-act="connect"' + (sy.busy ? " disabled" : "") + ">" + (sy.busy ? "Connecting…" : "Connect sheet") + "</button>";
     } else {
       var n = pendingCount(), a = attentionCount();
+      var syncLbl = sy.busy ? "Syncing…" : (n ? "Sync now (" + n + ")" : "Up to date");
       h += '<p class="hint"><strong>' + esc(s.title) + "</strong></p>" +
         '<p class="syncline">' + (sy.busy ? "Syncing…" : (n ? n + " waiting to send." : (a ? "Needs attention below." : "Everything is in the sheet."))) + "</p>" +
-        '<div class="sheetbtns"><button class="btn solid" data-act="syncnow"' + (sy.busy ? " disabled" : "") + '>Sync now</button>' +
+        '<div class="sheetbtns"><button class="btn solid" data-act="syncnow"' + (sy.busy || !n ? " disabled" : "") + ">" + syncLbl + "</button>" +
         '<button class="btn" data-act="checksheet"' + (sy.busy ? " disabled" : "") + ">Check sheet</button></div>" +
         '<p class="note"><button class="link" data-act="disconnect">Disconnect this sheet</button>' +
         (bridgeMode() ? ' &nbsp; <button class="link" data-act="forgetbridge">Change bridge settings</button>' : "") + "</p>";
@@ -2115,6 +2212,7 @@
     if (ev.target.id === "sheetLink") sy.linkDraft = ev.target.value;
     else if (ev.target.id === "bridgeUrl") sy.bUrl = ev.target.value;
     else if (ev.target.id === "bridgeToken") sy.bTok = ev.target.value;
+    else if (ev.target.id === "histSearch") { histQ = ev.target.value; var clr = $("#histClear"); if (clr) clr.hidden = !histQ; var hb = $("#histBody"); if (hb) hb.innerHTML = renderHistoryBody(sortedEntries()); }
   });
   window.addEventListener("online", function () { runSync(); });
 

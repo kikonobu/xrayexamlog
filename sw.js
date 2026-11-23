@@ -1,7 +1,7 @@
 /* Offline helper for the exam log. HTML uses network-first with a fast offline fallback so
    updates appear on the first open, while icons and fonts load straight from cache.
    It never saves or touches your exam data or your Google sheet. */
-var VERSION = "examlog-app-v4-icon";
+var VERSION = "examlog-app-v5";
 var FONTS = "examlog-fonts-v1";
 var SHELL = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 

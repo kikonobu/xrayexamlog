@@ -305,16 +305,6 @@
   .selectlabel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; font-size: 15px; font-weight: 700; color: var(--muted); }
   .selectlabel select { min-height: 48px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font-size: 17px; font-weight: 700; }
   .preview { margin: 0; padding: 10px; border-radius: 10px; background: var(--bg); font: 14px/1.5 ui-monospace, Menlo, monospace; overflow-x: auto; white-space: pre; }
-  .shiftbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 44px; margin: 0 0 12px; padding: 8px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--muted); font-size: 14px; font-weight: 700; text-align: left; }
-  .shiftbar.on { border-color: var(--ok); color: var(--ink); }
-  .shiftbar-main { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .shiftdot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
-  .shiftbar.on .shiftdot { background: var(--ok); }
-  .shiftact { flex: none; color: var(--accent); }
-  .rec-label { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-  .recent { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
-  .recpill { min-height: 44px; padding: 6px 14px; border-radius: 999px; border: 2px solid var(--accent); background: var(--surface); color: var(--accent); font-size: 16px; font-weight: 700; line-height: 1.15; }
-  .recpill:active { transform: scale(0.98); }
   .addpartbtn { margin: 10px 0 4px; border-style: dashed; color: var(--accent); border-color: var(--accent); }
   .searchbar { position: relative; margin: 10px 0; }
   .searchbar input { display: block; width: 100%; min-height: 48px; padding: 0 44px 0 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); font-size: 16px; -webkit-appearance: none; }
@@ -468,7 +458,7 @@
     ];
   }
 
-  var state = { v: VERSION, cfg: { cats: defaultCats() }, entries: [], sync: { on: false, id: "", tabId: 0, title: "" }, dq: [], tomb: {}, cfgU: 0, shift: { on: false, setting: "", tech: [] } };
+  var state = { v: VERSION, cfg: { cats: defaultCats() }, entries: [], sync: { on: false, id: "", tabId: 0, title: "" }, dq: [], tomb: {}, cfgU: 0 };
   var storageFailed = false;
   var view = "log";
   var sel = {};
@@ -550,84 +540,22 @@
     if (!Array.isArray(state.dq)) state.dq = [];
     if (!state.tomb) state.tomb = {};
     if (!state.cfgU) state.cfgU = 0;
-    if (!state.shift || typeof state.shift !== "object") state.shift = { on: false, setting: "", tech: [] };
-  }
-  function validShiftSetting() {
-    var c = findCat("setting");
-    var v = state.shift && state.shift.setting;
-    if (!c || !c.on || !v) return null;
-    if (c.multi) {
-      var arr = asArray(v).filter(function (o) { return c.options.indexOf(o) !== -1; });
-      return arr.length ? arr : null;
-    }
-    var s = asArray(v)[0];
-    return s && c.options.indexOf(s) !== -1 ? s : null;
-  }
-  function validShiftTech() {
-    var c = findCat("tech");
-    var v = state.shift && state.shift.tech;
-    if (!c || !c.on || !v) return null;
-    var arr = asArray(v).filter(function (o) { return c.options.indexOf(o) !== -1; });
-    if (!arr.length) return null;
-    return c.multi ? arr : arr[0];
-  }
-  function applyShiftLock() {
-    if (!state.shift || !state.shift.on) return;
-    var sv = validShiftSetting();
-    var tv = validShiftTech();
-    if (sv) sel.setting = Array.isArray(sv) ? sv.slice() : sv;
-    if (tv) sel.tech = Array.isArray(tv) ? tv.slice() : tv;
-  }
-  function captureShiftFromVals(settingVal, techVal) {
-    if (settingVal) state.shift.setting = Array.isArray(settingVal) ? settingVal.slice() : settingVal;
-    if (techVal) state.shift.tech = Array.isArray(techVal) ? techVal.slice() : [techVal];
-  }
-  function toggleShiftLock() {
-    if (state.shift.on) {
-      state.shift.on = false;
-      if (!parts.length && !pendP && !pendV && !timeLocked) {
-        delete sel.setting;
-        delete sel.tech;
-      }
-    } else {
-      state.shift.on = true;
-      var sv = sel.setting, tv = sel.tech;
-      if (!sv || !tv) {
-        var last = sortedEntries()[0];
-        if (last) {
-          (last.vals || []).forEach(function (v) {
-            if (v.id === "setting" && !sv) sv = v.v;
-            if (v.id === "tech" && !tv) tv = v.v;
-          });
-        }
-      }
-      captureShiftFromVals(sv, tv);
-      applyShiftLock();
-    }
-    rawSave();
-    render();
   }
   var DRAFT_KEY = "examlog:draft";
   function saveDraft() {
     try {
-      var hasWork = parts.length > 0 || !!pendP || !!pendV || timeLocked;
-      if (editingId || !hasWork) { localStorage.removeItem(DRAFT_KEY); return; }
+      if (editingId || !anySelected()) { localStorage.removeItem(DRAFT_KEY); return; }
       localStorage.setItem(DRAFT_KEY, JSON.stringify({ sel: sel, parts: parts, pendP: pendP, pendV: pendV, dateStr: dateStr, timeStr: timeStr, timeLocked: timeLocked, at: Date.now() }));
     } catch (e) { /* optional */ }
   }
   function restoreDraft() {
-    var restored = false;
     try {
       var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
-      if (!d || Date.now() - d.at > 6 * 3600 * 1000) { localStorage.removeItem(DRAFT_KEY); }
-      else {
-        sel = d.sel || {}; parts = d.parts || []; pendP = d.pendP || null; pendV = d.pendV || null;
-        if (d.timeLocked) { timeLocked = true; timeStr = d.timeStr; dateStr = d.dateStr; }
-        restored = true;
-        advance();
-      }
+      if (!d || Date.now() - d.at > 6 * 3600 * 1000) { localStorage.removeItem(DRAFT_KEY); return; }
+      sel = d.sel || {}; parts = d.parts || []; pendP = d.pendP || null; pendV = d.pendV || null;
+      if (d.timeLocked) { timeLocked = true; timeStr = d.timeStr; dateStr = d.dateStr; }
+      advance();
     } catch (e) { /* ignore */ }
-    if (!restored) applyShiftLock();
   }
   function rawSave() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); storageFailed = false; }
@@ -931,33 +859,9 @@
       }).join("") + "</div>";
     }
     h += '<h2 class="steph">' + (parts.length ? "Add another body part" : "Body part") + "</h2>";
-    var rec = recentParts(3);
-    if (rec.length) {
-      h += '<p class="rec-label">Recent</p><div class="recent">' + rec.map(function (x) {
-        return '<button class="recpill" data-act="recentpart" data-p="' + esc(x.p) + '" data-n="' + esc(x.n) + '">' + esc(partLabel(x)) + "</button>";
-      }).join("") + "</div>";
-    }
     return h + '<div class="tiles c2">' + groups.map(function (g) {
       return '<button class="tile reg" data-act="region" data-region="' + esc(g[0]) + '">' + esc(g[0]) + "</button>";
     }).join("") + "</div>";
-  }
-
-  function recentParts(max) {
-    var pc = findCat("exam"), vc = findCat("views");
-    if (!pc || !vc) return [];
-    var seen = {}, out = [];
-    sortedEntries().forEach(function (e) {
-      if (out.length >= max) return;
-      partsOf(e).forEach(function (x) {
-        if (out.length >= max || !x.p) return;
-        if (pc.options.indexOf(x.p) === -1) return;
-        if (x.n && vc.options.indexOf(x.n) === -1) return;
-        if (!x.n && !isFluoroPart(x.p)) return;
-        var k = x.p + "\0" + (x.n || "");
-        if (!seen[k]) { seen[k] = true; out.push({ p: x.p, n: x.n || "" }); }
-      });
-    });
-    return out;
   }
 
   function renderCatStep(c) {
@@ -998,25 +902,6 @@
     return h + renderWhen() + '<p class="note"><button class="link" data-act="clear">Start over</button></p>';
   }
 
-  function renderShiftBar() {
-    var sc = findCat("setting"), tc = findCat("tech");
-    if ((!sc || !sc.on) && (!tc || !tc.on)) return "";
-    var on = !!(state.shift && state.shift.on);
-    var label;
-    if (on) {
-      var bits = [];
-      var sv = validShiftSetting(), tv = validShiftTech();
-      if (sv) bits.push(asArray(sv).join(", "));
-      if (tv) bits.push(asArray(tv).join(", "));
-      label = bits.length ? "Shift lock: " + bits.join(" · ") : "Shift lock on — locks after next save";
-    } else {
-      label = "Shift lock: keep Setting & Tech";
-    }
-    return '<button class="shiftbar' + (on ? " on" : "") + '" data-act="toggleshift" aria-pressed="' + on + '">' +
-      '<span class="shiftbar-main"><span class="shiftdot" aria-hidden="true"></span><span>' + esc(label) + '</span></span>' +
-      '<span class="shiftact">' + (on ? "Turn off" : "Turn on") + "</span></button>";
-  }
-
   function editBanner() {
     var o = state.entries.find(function (x) { return x.id === editingId; });
     if (!o) return "";
@@ -1027,7 +912,7 @@
   function renderLog() {
     if (step !== "review" && stepIds().indexOf(step) === -1) step = firstIncomplete();
     var body = step === "review" ? renderReview() : (step === "part" ? renderPartStep() : renderCatStep(findCat(step)));
-    return (editingId ? editBanner() : "") + renderStrip() + (editingId ? "" : renderShiftBar()) + '<section class="wiz">' + body + "</section>";
+    return (editingId ? editBanner() : "") + renderStrip() + '<section class="wiz">' + body + "</section>";
   }
 
   function sortedEntries() {
@@ -1303,7 +1188,6 @@
 
   function clearAll() {
     sel = {}; parts = []; pendP = null; pendV = null; flag = false; timeLocked = false; editWhen = false; tick();
-    applyShiftLock();
     goStep("part");
     render();
   }
@@ -1322,13 +1206,9 @@
       }),
       u: Date.now()
     };
-    if (state.shift && state.shift.on) {
-      captureShiftFromVals(sel.setting, sel.tech);
-    }
     state.entries.push(entry);
     afterAdd(entry);
     sel = {}; parts = []; pendP = null; pendV = null; flag = false; timeLocked = false; editWhen = false; tick();
-    applyShiftLock();
     goStep("part");
     showToast("Saved " + fmtTime(entry.time), entry.id);
     render();
@@ -1483,9 +1363,7 @@
     else if (act === "pickpart" || act === "pickviews") { pickPart(act, t.dataset.val); render(); }
     else if (act === "rmpart") { parts.splice(Number(t.dataset.i), 1); if (!parts.length) goStep("part"); render(); }
     else if (act === "region") { regionSel = t.dataset.region; pstage = "parts"; topNext = true; render(); }
-    else if (act === "recentpart") { addPart(t.dataset.p, t.dataset.n); render(); }
     else if (act === "addpart") { goStep("part"); render(); }
-    else if (act === "toggleshift") toggleShiftLock();
     else if (act === "histfilter") { histAssist = (histAssist === t.dataset.code && t.dataset.code) ? "" : t.dataset.code; var hb = $("#histBody"); if (hb) hb.innerHTML = renderHistoryBody(sortedEntries()); else render(); }
     else if (act === "clearsearch") { histQ = ""; var hs = $("#histSearch"); if (hs) { hs.value = ""; hs.focus(); } var clr = $("#histClear"); if (clr) clr.hidden = true; var hb2 = $("#histBody"); if (hb2) hb2.innerHTML = renderHistoryBody(sortedEntries()); }
     else if (act === "copyplain") copyPlainText();
@@ -1509,6 +1387,7 @@
     else if (act === "forgetbridge") { window.claude.__forget(); location.reload(); }
     else if (act === "syncnow") runSync();
     else if (act === "checksheet") checkSheet();
+    else if (act === "cleansheet") cleanSheetNow();
     else if (act === "sendmissing") sendMissing();
     else if (act === "importrows") importRows();
     else if (act === "dismissrec") { sy.rec = null; render(); }
@@ -1827,10 +1706,100 @@
   }
   function adopt(e, row) { e.sh = row.slice(); e.sp = ""; e.u = Date.now(); }
 
+  function cellsForAnyRow(raw) {
+    var r = pad7(raw);
+    var s = function (v) { return v ? { userEnteredValue: { stringValue: v } } : {}; };
+    var c0 = s(r[0]);
+    var nd = nDate(r[0]);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(nd)) {
+      var dp = nd.split("-").map(Number);
+      var serial = Math.round((Date.UTC(dp[0], dp[1] - 1, dp[2]) - Date.UTC(1899, 11, 30)) / 86400000);
+      c0 = { userEnteredValue: { numberValue: serial }, userEnteredFormat: { numberFormat: { type: "DATE", pattern: "mm/dd/yyyy" } } };
+    }
+    var c1 = s(r[1]);
+    var tm = nMin(r[1]);
+    if (tm >= 0) {
+      var gt = guessTime(r[1]).split(":").map(Number);
+      c1 = { userEnteredValue: { numberValue: (gt[0] * 60 + gt[1]) / 1440 }, userEnteredFormat: { numberFormat: { type: "TIME", pattern: "hh:mm" } } };
+    }
+    return [c0, c1, s(r[2]), s(r[3]), s(r[4]), s(r[5]), s(r[6])];
+  }
+
+  function rowSortKey(raw) {
+    var nd = nDate(raw[0]);
+    var dk = /^\d{4}-\d{2}-\d{2}$/.test(nd) ? nd : "9999-99-99";
+    var tk = nMin(raw[1]) >= 0 ? guessTime(raw[1]) : "99:99";
+    return dk + " " + tk;
+  }
+
+  async function cleanAndSortSheet() {
+    var rows = await readRows();
+    var lastData = 0;
+    for (var i = rows.length - 1; i >= 1; i--) {
+      if (rows[i] && rows[i].some(function (c) { return String(c || "").trim() !== ""; })) { lastData = i; break; }
+    }
+    if (lastData < 1) return { dups: 0, sorted: false };
+    var data = [];
+    for (var j = 1; j <= lastData; j++) {
+      var r = rows[j];
+      if (r && r.some(function (c) { return String(c || "").trim() !== ""; })) {
+        data.push({ row: pad7(r), idx: j });
+      }
+    }
+    var unique = [];
+    var dups = 0;
+    data.forEach(function (item) {
+      var exists = unique.some(function (u) { return sameRow(u.row, item.row); });
+      if (exists) dups++; else unique.push(item);
+    });
+    var ordered = unique.slice().sort(function (a, b) {
+      var ka = rowSortKey(a.row), kb = rowSortKey(b.row);
+      if (ka !== kb) return ka.localeCompare(kb);
+      return a.idx - b.idx;
+    });
+    var orderChanged = ordered.some(function (item, idx) { return item.idx !== unique[idx].idx; });
+    var hasGaps = data.length !== lastData;
+    if (!dups && !orderChanged && !hasGaps) return { dups: 0, sorted: false };
+    var reqs = [];
+    if (ordered.length) {
+      reqs.push({
+        updateCells: {
+          start: { sheetId: state.sync.tabId, rowIndex: 1, columnIndex: 0 },
+          rows: ordered.map(function (item) { return { values: cellsForAnyRow(item.row) }; }),
+          fields: "userEnteredValue,userEnteredFormat.numberFormat"
+        }
+      });
+    }
+    if (lastData > ordered.length) {
+      reqs.push({
+        deleteDimension: {
+          range: { sheetId: state.sync.tabId, dimension: "ROWS", startIndex: ordered.length + 1, endIndex: lastData + 1 }
+        }
+      });
+    }
+    await sheetCall("update_spreadsheet", { spreadsheetId: state.sync.id, requests: reqs });
+    return { dups: dups, sorted: orderChanged || hasGaps };
+  }
+
+  async function cleanSheetNow() {
+    if (!state.sync.on || sy.busy) return;
+    sy.busy = true; sy.err = ""; render();
+    try {
+      var res = await cleanAndSortSheet();
+      var bits = [];
+      if (res.dups) bits.push("removed " + res.dups + " duplicate" + (res.dups === 1 ? "" : "s"));
+      if (res.sorted) bits.push("sorted by date & time");
+      notice = bits.length ? "Sheet updated: " + bits.join(" and ") + "." : "Sheet is already clean and in time order.";
+      clearTimeout(noticeTimer);
+      noticeTimer = setTimeout(function () { notice = ""; if (view === "history") render(); }, 5000);
+    } catch (err) { sy.err = sheetErrText(err); }
+    sy.busy = false; render();
+  }
+
   async function doAdd(e) {
     var row = sheetRow(e);
     var rows = await readRows();
-    if (e.sp === "check" && findRow(rows, row)) { adopt(e, row); return; }
+    if (findRow(rows, row)) { adopt(e, row); return; }
     var n = 2;
     for (var i = rows.length - 1; i >= 1; i--) {
       if (rows[i] && String(rows[i][0] || "").trim() !== "") { n = i + 2; break; }
@@ -1889,6 +1858,9 @@
         current = adds[j];
         await doAdd(current);
         rawSave(); cloudPush(current.id);
+      }
+      if (ups.length || adds.length) {
+        await cleanAndSortSheet();
       }
     } catch (err) {
       if (current && isAmbiguous(err) && (current.sp === "add" || current.sp === "check")) current.sp = "check";
@@ -2198,7 +2170,7 @@
         '<p class="syncline">' + (sy.busy ? "Syncing…" : (n ? n + " waiting to send." : (a ? "Needs attention below." : "Everything is in the sheet."))) + "</p>" +
         '<div class="sheetbtns"><button class="btn solid" data-act="syncnow"' + (sy.busy || !n ? " disabled" : "") + ">" + syncLbl + "</button>" +
         '<button class="btn" data-act="checksheet"' + (sy.busy ? " disabled" : "") + ">Check sheet</button></div>" +
-        '<p class="note"><button class="link" data-act="disconnect">Disconnect this sheet</button>' +
+        '<p class="note"><button class="link" data-act="cleansheet"' + (sy.busy ? " disabled" : "") + '>Sort &amp; remove duplicates</button> &nbsp; <button class="link" data-act="disconnect">Disconnect this sheet</button>' +
         (bridgeMode() ? ' &nbsp; <button class="link" data-act="forgetbridge">Change bridge settings</button>' : "") + "</p>";
     }
     if (sy.err) h += '<p class="note warnt" role="alert">' + esc(sy.err) + "</p>";

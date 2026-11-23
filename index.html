@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Clinical exam log</title>
+<title>X-Ray Log</title>
 <meta name="examlog-standalone" content="1">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Exam log">
+<meta name="apple-mobile-web-app-title" content="X-Ray Log">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#EDEFF3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0B1218" media="(prefers-color-scheme: dark)">
@@ -351,8 +351,18 @@
 
   function call(tool, input) {
     if (!cfg) return Promise.reject(fail("server_not_connected", "The bridge isn’t set up yet."));
-    return fetch(cfg.url, { method: "POST", body: JSON.stringify({ token: cfg.token, tool: tool, input: input || {} }) })
-      .then(function (r) { return r.text(); }, function () { throw fail("server_unavailable", "Couldn’t reach the bridge."); })
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 30000) : null;
+    var opts = { method: "POST", body: JSON.stringify({ token: cfg.token, tool: tool, input: input || {} }) };
+    if (ctrl) opts.signal = ctrl.signal;
+    return fetch(cfg.url, opts)
+      .then(function (r) {
+        if (timer) clearTimeout(timer);
+        return r.text();
+      }, function () {
+        if (timer) clearTimeout(timer);
+        throw fail("server_unavailable", "Couldn’t reach the bridge (timed out or offline).");
+      })
       .then(function (t) {
         var j;
         try { j = JSON.parse(t); } catch (e) { throw fail("upstream_error", "The bridge sent back something unexpected."); }
@@ -714,7 +724,7 @@
   function renderHeader() {
     var today = nowParts().date;
     var n = state.entries.filter(function (e) { return e.date === today; }).length;
-    $("#top").innerHTML = "<h1>Exam log</h1><div class=\"topr\">" + syncChip() + (n ? '<span class="today" aria-live="polite">' + n + " today</span>" : "") + "</div>";
+    $("#top").innerHTML = "<h1>X-Ray Log</h1><div class=\"topr\">" + syncChip() + (n ? '<span class="today" aria-live="polite">' + n + " today</span>" : "") + "</div>";
     var tabs = [["log", "Log"], ["history", "History"], ["options", "Options"]];
     $("#tabs").innerHTML = tabs.map(function (t) {
       var extra = t[0] === "history" && state.entries.length ? "<small>" + state.entries.length + "</small>" : "";
@@ -1701,8 +1711,11 @@
     var ct = parseColonTime(t);
     if (ct) return ct.h * 60 + ct.m;
     if (/^\d+$/.test(t)) {
-      if (t.length <= 2) return Number(t) * 60;
-      return Number(t.slice(0, t.length - 2)) * 60 + Number(t.slice(-2));
+      var hh = t.length <= 2 ? Number(t) : Number(t.slice(0, t.length - 2));
+      var mm = t.length <= 2 ? 0 : Number(t.slice(-2));
+      if (hh >= 1 && hh <= 6) hh += 12;
+      if (hh > 23 || mm > 59) return -1;
+      return hh * 60 + mm;
     }
     return -1;
   }
@@ -1802,6 +1815,14 @@
   }
 
   async function cleanAndSortSheet() {
+    if (bridgeMode()) {
+      try {
+        var fast = await sheetCall("clean_and_sort", { spreadsheetId: state.sync.id });
+        if (fast && typeof fast.dups === "number") return fast;
+      } catch (err) {
+        if (!/Unknown request/i.test(String((err && err.message) || ""))) throw err;
+      }
+    }
     var rows = await readRows();
     var lastData = 0;
     for (var i = rows.length - 1; i >= 1; i--) {
@@ -1809,44 +1830,43 @@
     }
     if (lastData < 1) return { dups: 0, sorted: false };
 
-    /* 1. Find exact duplicate rows and interior blank rows, and delete them from bottom to top one row at a time. */
+    /* Fallback when bridge hasn’t been updated yet: avoid freezing on huge sorts. */
     var seen = [];
     var toDelete = [];
     var dups = 0;
     for (var j = 1; j <= lastData; j++) {
       var r = rows[j];
       var empty = !r || !r.some(function (c) { return String(c || "").trim() !== ""; });
-      if (empty) {
-        toDelete.push(j + 1);
-        continue;
-      }
+      if (empty) { toDelete.push(j + 1); continue; }
       var p = pad7(r);
-      var isDup = seen.some(function (u) { return sameRow(u, p); });
-      if (isDup) {
-        dups++;
-        toDelete.push(j + 1);
-      } else {
-        seen.push(p);
-      }
+      if (seen.some(function (u) { return sameRow(u, p); })) { dups++; toDelete.push(j + 1); }
+      else seen.push(p);
     }
+    var current = seen.map(function (row, idx) { return { row: row, pos: idx }; });
+    var ordered = current.slice().sort(function (a, b) {
+      var ka = rowSortKey(a.row), kb = rowSortKey(b.row);
+      return ka !== kb ? ka.localeCompare(kb) : a.pos - b.pos;
+    });
+    var diffCount = 0;
+    for (var q = 0; q < ordered.length; q++) { if (ordered[q].pos !== q) diffCount++; }
+    if (bridgeMode() && (toDelete.length + diffCount > 12)) {
+      throw makeErr("bridge_update", "Update your Google Apps Script bridge to sort " + diffCount + " rows in one tap (takes under 1 second).");
+    }
+
     for (var d = toDelete.length - 1; d >= 0; d--) {
       await deleteRowAt(toDelete[d]);
     }
-
-    /* 2. Re-read after deletions and sort chronologically via crash-safe cycle shifts
-          using one temporary backup row at the bottom so no exam is ever overwritten before it is copied. */
     if (toDelete.length) rows = await readRows();
-    var current = [];
+    current = [];
     for (var k = 1; k < rows.length; k++) {
       var cr = rows[k];
       if (cr && cr.some(function (c) { return String(c || "").trim() !== ""; })) {
         current.push({ row: pad7(cr), rowNum: k + 1, pos: current.length });
       }
     }
-    var ordered = current.slice().sort(function (a, b) {
+    ordered = current.slice().sort(function (a, b) {
       var ka = rowSortKey(a.row), kb = rowSortKey(b.row);
-      if (ka !== kb) return ka.localeCompare(kb);
-      return a.pos - b.pos;
+      return ka !== kb ? ka.localeCompare(kb) : a.pos - b.pos;
     });
     var n = current.length;
     var src = ordered.map(function (item) { return item.pos; });
@@ -1858,11 +1878,7 @@
       if (visited[pIdx] || src[pIdx] === pIdx) { visited[pIdx] = true; continue; }
       var cyc = [];
       var cur = pIdx;
-      while (!visited[cur]) {
-        visited[cur] = true;
-        cyc.push(cur);
-        cur = src[cur];
-      }
+      while (!visited[cur]) { visited[cur] = true; cyc.push(cur); cur = src[cur]; }
       var maxAt = 0;
       for (var c = 1; c < cyc.length; c++) { if (cyc[c] > cyc[maxAt]) maxAt = c; }
       cyc = cyc.slice(maxAt).concat(cyc.slice(0, maxAt));
@@ -2354,7 +2370,7 @@
       a.rel = "apple-touch-icon"; a.href = small;
       document.head.appendChild(a);
       var man = {
-        name: "Clinical exam log", short_name: "Exam log", display: "standalone",
+        name: "X-Ray Log", short_name: "X-Ray Log", display: "standalone",
         background_color: "#EDEFF3", theme_color: "#0F1A24",
         start_url: location.href.split("#")[0],
         icons: [{ src: large, sizes: "512x512", type: "image/png" }]

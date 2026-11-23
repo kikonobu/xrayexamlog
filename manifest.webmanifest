@@ -1,6 +1,6 @@
 {
-  "name": "Clinical exam log",
-  "short_name": "Exam log",
+  "name": "X-Ray Log",
+  "short_name": "X-Ray Log",
   "description": "Log clinical exams quickly and keep your Clinical Experience Record up to date.",
   "start_url": "./",
   "scope": "./",
